@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+
+from math import*
+import sys
+
+def verif_arg() :
+    if len(sys.argv) <= 1 :
+        exit()
+    if sys.argv[1] == "-h" :
+        print("USAGE")
+        print("    ./101pong x0 y0 z0 x1 y1 z1 n\n")
+        print("DESCRIPTION")
+        print("    x0   ball abscissa at time t - 1")
+        print("    y0   ball ordinate at time t - 1")
+        print("    z0   ball altitude at time t - 1")
+        print("    x1   ball abscissa at time t")
+        print("    y1   ball ordinate at time t")
+        print("    z1   ball altitude at time t")
+        print("    n    time shift (greater than or equal to zero, integer)")
+    if len(sys.argv) != 8 :
+        exit()
+
+verif_arg()
+x0 = float(sys.argv[1])
+y0 = float(sys.argv[2])
+z0 = float(sys.argv[3])
+x1 = float(sys.argv[4])
+y1 = float(sys.argv[5])
+z1 = float(sys.argv[6])
+n = int(sys.argv[7])
+        
+v_x  = x1 - x0
+v_y  = y1 - y0
+v_z  = z1 - z0
+
+xf = x1 + v_x * n
+yf = y1 + v_y * n
+zf = z1 + v_z * n
+
+tap = 1
+
+if z1 < 0:
+    if z1 - z0 > 0:
+        tap = 1
+    elif z1 - z0 < 0:
+        tap = 0
+elif z1 > 0:
+    if z1 - z0 > 0:
+        tap = 0
+    elif z1 - z0 < 0:
+        tap = 1
+print("The velocity vector of the ball is:")
+print("(", end = "")
+print("%.2f" % v_x, end = ", ")
+print("%.2f" % v_y, end = ", ")
+print("%.2f" % v_z, end = "")
+print(")")
+print("At time t +", n, end = "")
+print(", ball coordiantes will be:")
+print("(", end = "")
+print("%.2f" % xf, end = ", ")
+print("%.2f" % yf, end = ", ")
+print("%.2f" % zf, end = "")
+print(")")
+if (sqrt(pow(v_x, 2) + pow(v_y, 2) + pow(v_z, 2))) == 0:
+    sys.exit(0)
+if tap == 1:
+    print("The incidence angle is:")
+    angle_rad = acos(v_z/(sqrt(pow(v_x, 2) + pow(v_y, 2) + pow(v_z, 2))))
+    angle = fabs(180*(angle_rad - (pi/2))/pi)
+    if angle <= 0 or angle >= 90:
+        print("The ball won't reach the bat.")
+    else:
+        print("%.2f" % angle, end = " ")
+        print("degrees")
+else:
+    print("The ball won't reach the bat.")

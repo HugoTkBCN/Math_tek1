@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+
+import sys
+
+def f(x, a0, a1, a2, a3, a4):
+    res = a4*(x**4) + a3*(x**3) + a2*(x**2) + a1*x + a0
+    return (res)
+
+def f_d(x, a0, a1, a2, a3, a4):
+    res = 4*(a4*(x**3)) + 3*(a3*(x**2)) + 2*(a2*x)+ a1
+    return (res)
+
+def printage(x, n):
+    str_x = str(x)
+    if (len(str_x) >= n + 2) :
+        str_x = str(round(x, n))
+        print("x = ", end = "")
+        for i in range(0, n + 2):
+            if (i < len(str_x)) :
+                print(str_x[i], end = "")
+            else:
+                print("0", end ="")
+    else:
+        print("x =", x, end = "")
+
+def verif_print(res, n):
+    str_res = str(res)
+    if (len(str_res) < n + 2) :
+        for i in range(0, ((n + 2) - len(str_res))) :
+            print("0", end = "")
+    print("\n", end = "");
+
+def do_bisection(opt, a0, a1, a2, a3, a4, n):
+    a = 0
+    b = 1
+    i = 0
+    while (abs(b - a) >= 10**(-n)):
+        c = (a + b) / 2
+        if (f(b, a0, a1, a2, a3, a4) > 0) :
+            if (f(c, a0, a1, a2, a3, a4) > 0) :
+                b = c
+            else :
+                a = c
+        else:
+            if (f(c, a0, a1, a2, a3, a4) > 0) :
+                a = c
+            else :
+                b = c
+        if (i > 0):
+            print("\n", end = "")
+        i += 1
+        printage(c, n)
+    return (c)
+
+def do_newton(opt, a0, a1, a2, a3, a4, n):
+    xn1 = 0.5
+    xn2 = 1
+    xn = xn1
+    i = 0
+    while (abs(xn1 - xn2) >= 10**(-n)):
+        xn1 = xn
+        if (i > 0) :
+            print("\n", end = "")
+        printage(xn1, n)
+        fx = f(xn1, a0, a1, a2, a3, a4)
+        fxd = f_d(xn1, a0, a1, a2, a3, a4)
+        xn2 = xn1 - (fx / fxd)
+        xn = xn2
+        i += 1
+    return (xn1)
+
+def do_secant(opt, a0, a1, a2, a3, a4, n):
+    xn1 = 0
+    xn2 = 1
+    i = 0;
+    while (abs(xn1 - xn2) >= 10**(-n)):
+        fxn1 = f(xn1, a0, a1, a2, a3, a4)
+        fxn2 = f(xn2, a0, a1, a2, a3, a4)
+        xn = xn2 - ((fxn2) * (xn2 - xn1) / (fxn2 - fxn1))
+        fxn = f(xn, a0, a1, a2, a3, a4)
+        if (i > 0):
+            print("\n", end = "")
+        printage(xn, n)
+        xn1 = xn2
+        xn2 = xn
+        i += 1
+    return (xn)
+
+def print_help():
+    print("USAGE")
+    print("    ./105torus opt a0 a1 a2 a3 a4 n\n")
+    print("DESCRIPTION")
+    print("    opt       method option:")
+    print("                  1 for the bisection method")
+    print("                  2 for Newton's method")
+    print("                  3 for the secant method")
+    print("    a[0-4]    coefficients of the equation")
+    print("    n         precision (the application of the polynomial to the solution should")
+    print("              be smaller than 10ˆ-n)")
+
+def check_args():
+    if len(sys.argv) <= 1:
+        exit(84)
+    elif sys.argv[1] == "-h":
+        print_help();
+        exit(0)
+    elif len(sys.argv) != 8:
+        exit(84)
+    for i in range (1, 7):
+        if (sys.argv[i].isnumeric() == False and sys.argv[i][0] != '-'):
+            exit(84)
+
+check_args()
+
+try:
+    opt = int(sys.argv[1])
+    a0 = int(sys.argv[2])
+    a1 = int(sys.argv[3])
+    a2 = int(sys.argv[4])
+    a3 = int(sys.argv[5])
+    a4 = int(sys.argv[6])
+    n = int(sys.argv[7])
+except ValueError:
+    exit(84);
+    
+if (opt < 1 or opt > 3) :
+    exit (84)
+
+if (opt == 1) :
+    res = do_bisection(opt, a0, a1, a2, a3, a4, n)
+    verif_print(res, n)
+elif (opt == 2) :
+    res = do_newton(opt, a0, a1, a2, a3, a4, n)
+    verif_print(res, n)
+else :
+    res = do_secant(opt, a0, a1, a2, a3, a4, n)
+    verif_print(res, n)
+

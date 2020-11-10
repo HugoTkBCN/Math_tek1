@@ -1,0 +1,262 @@
+#!/usr/bin/env python3
+
+from math import*
+import sys
+import array
+from decimal import*
+
+# Fonction util
+
+def check_flag(param, flag):
+    taille = len(param)
+    if taille < 2 :
+        param_exist = 0
+    else :
+        param_exist = 1
+    if param[0] == '-' and param[1] == flag and param_exist == 1 :
+        return (1)
+    else :
+        return (0)
+
+def check_error(str):
+    for char in str:
+        if char.isalpha() == True:
+            print("Argument must be a number.\n");
+            exit(84);
+
+# Voir les options
+
+def check_option(resulta, matrice, av, ac) :
+    offset = 3
+    while offset < ac :
+        if check_flag(av[offset], 't') or check_flag(av[offset], 'z') :
+            if (offset + 3) <= ac :
+                if check_flag(av[offset], 't') :
+                    do_translation(av, offset, resulta, matrice)
+                else:
+                    do_scaling(av, offset, resulta, matrice)
+            else :
+                print("After -t/-z, enter two numbers.\n")
+                exit(84)
+            offset += 3
+        elif check_flag(av[offset], 'r') or check_flag(av[offset], 's') :
+            if (offset + 2) <= ac :
+                if check_flag(av[offset], 'r') :
+                    do_rotation(av, offset, resulta, matrice)
+                else:
+                    do_sym(av, offset, resulta, matrice)
+            else :
+                print("After -r/-zs, enter only one number.\n")
+                exit(84);
+            offset += 2;
+        else :
+            print("Unknowned option. Only -tzrs flags.\n")
+            exit(84)
+
+# lance les calcules
+
+def do_translation(av, offset, res, matrice) :
+    check_error(av[offset + 1])
+    check_error(av[offset + 2])
+    calc_translation(res, matrice, av, offset)
+
+def do_scaling(av, offset, res, matrice) :
+    check_error(av[offset + 1])
+    check_error(av[offset + 2])
+    calc_scaling(res, matrice, av, offset)
+
+def do_rotation(av, offset, res, matrice) :
+    check_error(av[offset + 1])
+    calc_rotation(res, matrice, av, offset)
+
+def do_sym(av, offset, res, matrice) :
+    check_error(av[offset + 1])
+    calc_sym(res, matrice, av, offset)
+
+# Calculs
+
+def calc_translation(res, matrice, av, offset):
+    trans_x = int(av[offset + 1])
+    trans_y = int(av[offset + 2])
+    matrice[2] += trans_x
+    matrice[5] += trans_y
+    if matrice[2] == 0:
+        matrice[2] = 0
+    if matrice[5] == 0:
+        matrice[5] = 0
+    print("Translation along vector (", end = "")
+    print(trans_x, end = "")
+    print(",", end = " ")
+    print(trans_y, end = "")
+    print(")", end = "\n")
+    res[0] += trans_x
+    res[1] += trans_y
+    res[0] = round(res[0], 2)
+    res[1] = round(res[1], 2)
+
+def calc_scaling(res, matrice, av, offset) :
+    scal_x = int(av[offset + 1]);
+    scal_y = int(av[offset + 2]);
+    for i in range (0, 6):
+        if i <= 2 :
+            matrice[i] = matrice[i] * scal_x
+        else :
+            matrice[i] = matrice[i] * scal_y
+    print("Scaling by factors", scal_x, "and", scal_y, end = "\n")
+    res[0] *= scal_x
+    res[1] *= scal_y
+    res[0] = round(res[0], 2)
+    res[1] = round(res[1], 2)
+
+def calc_rotation(res, matrice, av, offset) :
+    alpha = int(av[offset + 1])
+    alpha = (alpha * pi) / 180
+    rot_x = Decimal(cos(alpha))
+    rot_x = rot_x.quantize(Decimal('0.01'))
+    rot_y = Decimal(sin(alpha))
+    rot_y = rot_y.quantize(Decimal('0.01'))
+    rot_matrice = fill_matrice_rotation(rot_x, rot_y)
+    multiply_matrice(matrice, rot_matrice)
+    print("Rotation by a", av[offset + 1], "degree angle", end = "\n")
+    stock = res[0]
+    res[0] = stock * rot_matrice[0] + res[1] * rot_matrice[1]
+    res[1] = stock * rot_matrice[3] + res[1] * rot_matrice[4]
+    res[0] = round(res[0], 2)
+    res[1] = round(res[1], 2)
+
+def calc_sym(res, matrice, av, offset) :
+    alpha = int(av[offset + 1])
+    stock = 0
+    alpha = (alpha * pi) / 180
+    sym_x = Decimal(cos(2 * alpha))
+    sym_x = sym_x.quantize(Decimal('0.01'))
+    sym_y = Decimal(sin(2 * alpha))
+    sym_y = sym_y.quantize(Decimal('0.01'))
+    sym_matrice = fill_matrice_sym(sym_x, sym_y);
+    multiply_matrice(matrice, sym_matrice);
+    print("Reflection over an axis with an inclination angle of", av[offset + 1], "degrees", end = "\n") 
+    stock = res[0]
+    res[0] = stock * sym_matrice[0] + res[1] * sym_matrice[1]
+    res[1] = stock * sym_matrice[3] + res[1] * sym_matrice[4]
+    res[0] = round(res[0], 2)
+    res[1] = round(res[1], 2)
+
+# Gere les Matrice
+
+def print_matrice(matrice) :
+    for i in range(0, 9) :
+        if matrice[i] == 0 :
+            matrice[i] = 0
+        print("%.2f" % matrice[i], end = "")
+        i += 1
+        if i % 3 == 0 :
+            print("\n", end = "")
+        else : 
+            print("\t", end = "")
+
+def multiply_matrice(matrice, matrice2) :
+    save = array.array('d',(0 for i in range(0, 10)))
+    for i in range (0, 9) :
+        save[i] = matrice[i]
+        if matrice[i] == 0 :
+            matrice[i] = 0
+    matrice[0] = save[0] * matrice2[0] + save[1] * matrice2[3] + save[2] * matrice2[6]
+    matrice[0] = round(matrice[0], 2)
+    matrice[1] = save[0] * matrice2[1] + save[1] * matrice2[4] + save[2] * matrice2[7]
+    matrice[1] = round(matrice[1], 2)
+    matrice[2] = save[0] * matrice2[2] + save[1] * matrice2[5] + save[2] * matrice2[8]
+    matrice[2] = round(matrice[2], 2)
+    matrice[3] = save[3] * matrice2[0] + save[4] * matrice2[3] + save[5] * matrice2[6]
+    matrice[3] = round(matrice[3], 2)
+    matrice[4] = save[3] * matrice2[1] + save[4] * matrice2[4] + save[5] * matrice2[7]
+    matrice[4] = round(matrice[4], 2)
+    matrice[5] = save[3] * matrice2[2] + save[4] * matrice2[5] + save[5] * matrice2[8]
+    matrice[5] = round(matrice[5], 2)
+    matrice[6] = save[6] * matrice2[0] + save[7] * matrice2[3] + save[8] * matrice2[6]
+    matrice[6] = round(matrice[6], 2)
+    matrice[7] = save[6] * matrice2[1] + save[7] * matrice2[4] + save[8] * matrice2[7]
+    matrice[7] = round(matrice[7], 2)
+    matrice[8] = save[6] * matrice2[2] + save[7] * matrice2[5] + save[8] * matrice2[8]
+    matrice[8] = round(matrice[8], 2)
+    for i in range(0, 9) :
+        if matrice[i] == 0 :
+            matrice[i] = 0
+
+def fill_matrice_rotation(rot_x, rot_y) :
+    rot_matrice = array.array('d',(0 for i in range(0, 10)))
+    rot_matrice[0] = rot_x
+    rot_matrice[1] = -rot_y
+    rot_matrice[2] = 0
+    rot_matrice[3] = rot_y
+    rot_matrice[4] = rot_x
+    rot_matrice[5] = 0
+    rot_matrice[6] = 0
+    rot_matrice[7] = 0
+    rot_matrice[8] = 1
+    for i in range(0, 9) :
+        if rot_matrice[i] == 0 :
+            rot_matrice[i] = 0
+    return (rot_matrice)
+
+def fill_matrice_sym(sym_x, sym_y) :
+    sym_matrice = array.array('d',(0 for i in range(0, 10)))
+    sym_matrice[0] = sym_x
+    sym_matrice[1] = sym_y
+    sym_matrice[2] = 0
+    sym_matrice[3] = sym_y
+    sym_matrice[4] = -sym_x
+    sym_matrice[5] = 0
+    sym_matrice[6] = 0
+    sym_matrice[7] = 0
+    sym_matrice[8] = 1
+    for i in range(0, 9) :
+        if sym_matrice[i] == 0 :
+            sym_matrice[i] = 0
+    return (sym_matrice)
+    
+# Main
+
+def main() :
+    ac = len(sys.argv)
+    av = []
+    if sys.argv[1] == '-h' :
+        print("USAGE", end = "\n")
+        print("   ./102architect x y transfo1 arg11 [arg12] [transfo2 arg12 [arg22]] ...", end = "\n\n")
+        print("DESCRIPTION", end = "\n")
+        print("   x   abscissa of the original point", end = "\n")
+        print("   y   ordinate of the original point", end = "\n\n")
+        print("   transfo arg1 [arg2]", end = "\n")
+        print("   -t i j      translation along vector (i, j)\n   -z m n      scaling by factors m (x-axis) and n (y-axis)\n   -r d        rotation centered in O by a d degree angle\n   -s d        reflection over the axis passing through O with an inclination\n               angle of d degrees")
+        return (0)
+    for i in range(0, ac):
+        av.append(sys.argv[i])
+    global matrice
+    matrice = array.array('d',(0 for i in range(0, 10)))
+    matrice[0] = 1
+    matrice[4] = 1
+    matrice[8] = 1
+    global resulta
+    resulta = array.array('f',(0 for i in range(0, 3)))
+    if ac < 5:
+        print("Minimum 5 arguments.\n")
+        exit(84)
+    resulta[0] = int(av[1])
+    resulta[1] = int(av[2])
+    resulta[2] = 1
+    check_option(resulta, matrice, av, ac)
+    print_matrice(matrice)
+    resulta[0] = round(resulta[0], 2)
+    resulta[1] = round(resulta[1], 2)
+    print("(", end = "")
+    print(av[1], end = "")
+    print(",", end = " ")
+    print(av[2], end = "")
+    print(") => (", end = "")
+    print("%.2f" % resulta[0], end = "")
+    print(",", end = " ")
+    print("%.2f" % resulta[1], end = "")
+    print(")", end = "\n")
+    return (0)
+
+if __name__ == '__main__':
+    main()
