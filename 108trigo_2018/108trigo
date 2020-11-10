@@ -1,0 +1,21 @@
+#!/usr/bin/env python3
+
+
+import sys
+import math
+from utils_matrix import *
+from calc_matrix import *
+from fonction_matrix import *
+
+
+if (len(sys.argv) == 2 and sys.argv[1] == "-h") :
+    help()
+
+check_param()
+arg = error_management()
+matrix = []
+for i in range(int(arg)):
+    matrix.append([])
+    for j in range(int(arg)):
+        matrix[i].append(sys.argv[i * int(arg) + j + 2])
+run_calcul(matrix)

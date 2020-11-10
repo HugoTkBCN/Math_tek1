@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+
+import sys
+
+def func_k(k, n):
+    for i in range (1, 101):
+        print(i, end = " ")
+        print("%.2f" % n)
+        n = k * n * ((1000 - n) / 1000)
+
+def calcul(count, n):
+    n = count * n * ((1000 - n) / 1000)
+    return (n)
+
+def func_i(i0, i1, n):
+    count = 1
+    while (count <= 4):
+        res = n
+        for i in range (1, i0) :
+            res = calcul(count, res)
+        for i in range (i1 - i0 + 1):
+            print("%.2f" % count, end = " ")
+            print("%.2f" % res)
+            res = calcul(count, res)
+        count += 0.01
+
+def print_help():
+    print("USAGE")
+    print("    ./106bombyx n [k | i0 i 1]\n")
+    print("DESCRIPTION")
+    print("    n      number of first generation individuals")
+    print("    k      growth rate from 1 to 4")
+    print("    i0     initial generation (included)")
+    print("    i1     final generation (includied)")
+
+def check_args():
+    if len(sys.argv) <= 1:
+        exit(84)
+    elif sys.argv[1] == "-h":
+        print_help();
+        exit(0)
+    elif len(sys.argv) < 3 or len(sys.argv) > 4:
+        exit(84)
+    if len(sys.argv) == 3:
+        if (sys.argv[1].isnumeric() == False) :
+            exit(84)
+        for i in range (1, len(sys.argv[2])) :
+            if (sys.argv[2][i].isnumeric() == False and sys.argv[2][i] != '.') :
+                exit(84)
+        if (sys.argv[2][0] == '.' or sys.argv[2][len(sys.argv[2]) - 1] == '.') :
+            exit (84)
+        if float(sys.argv[2]) < 1 or float(sys.argv[2]) > 4 :
+            exit(84)
+
+
+check_args()
+
+try:
+    n = int(sys.argv[1])
+    if len(sys.argv) == 4:
+        i0 = int(sys.argv[2])
+        i1 = int(sys.argv[3])
+    else :
+        k = float(sys.argv[2])
+except ValueError:
+    exit(84)
+
+if (len(sys.argv) == 3):
+    func_k(k, n)
+elif (len(sys.argv) == 4):
+    if (i0 < 0):
+        exit(84)
+    if (i1 < i0):
+        exit(84)
+    func_i(i0, i1, n)

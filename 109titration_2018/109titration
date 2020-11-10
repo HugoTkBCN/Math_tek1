@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+
+import sys
+import math
+
+def help():
+    print("USAGE\n"
+    "    ./109titration file\n"
+    "\n"
+    "DESCRIPTION\n"
+    "    file   a csv file containing \"vol;ph\" lines")
+    exit(0)
+
+def check_error():
+    if "-h" in sys.argv or "--help" in sys.argv:
+        help()
+        exit(0)
+    if len(sys.argv) != 2:
+        print("Invalid number of arguments. Use ./109titration -h or ./109titration --help")
+        exit(84)
+
+
+def run(arr):
+    tmp = 0.0
+    derive = []
+    index_e = 0
+    res = 0;
+####1St Derivative####
+    print("Derivative:")
+    derive.append(0)
+    for i in range(1, len(arr) - 1):
+        derive.append((arr[i + 1][1] - arr[i - 1][1]) / (arr[i + 1][0] - arr[i - 1][0]))
+        print("%.1f ml -> %.2f" % (arr[i][0], derive[i]))
+        if tmp < derive[i]:
+            tmp = derive[i]
+            res = arr[i][0]
+            index_e = i
+    derive.append(0)
+    print("\n"
+          "Equivalent point at %.1f ml\n" % res)
+####2nd derivation####
+    print("Second derivative:")
+    for i in range(1, len(derive) - 3):
+        p = (derive[i + 2] - derive[i]) / (arr[i + 2][0] - arr[i][0])
+        print("%.1f ml -> %.2f" % (arr[i + 1][0], p))
+###Approximation###
+    ###PART1###
+    print("\nSecond derivative estimated:")
+    if index_e - 2 < 0:
+        i = arr[index_e - 1][0]
+        var1 = 0
+        p = var1
+    else:
+        i = arr[index_e - 1][0]
+        var1 = (derive[index_e] - derive[index_e - 2]) / (arr[index_e][0] - arr[index_e - 2][0])
+        p = var1
+    var2 = (derive[index_e + 1] - derive[index_e - 1]) / (arr[index_e + 1][0] - arr[index_e - 1][0])
+    z = (var2 - var1) / (10 * (arr[index_e][0] - arr[index_e - 1][0]))
+    while i - 0.05 < arr[index_e][0]:
+        print("%.1f ml -> %.2f" % (i, var1))
+        if math.fabs(p) > math.fabs(var1) and index_e - 1 > 0:
+            p = var1
+            res = i
+        var1 += z
+        i += 0.1
+    ###PART2###
+    if index_e + 3 >= len(derive):
+        z = -var2 / 10
+    else:
+        v1 = (derive[index_e + 2] - derive[index_e]) / (arr[index_e + 2][0] - arr[index_e][0])
+        z = (var1 - var2) / (10 * (arr[index_e + 1][0] - arr[index_e][0]))
+    var2 += z
+    while i - 0.05 < arr[index_e + 1][0]:
+        print("%.1f ml -> %.2f" % (i, var2))
+        var2 += z
+        i += 0.1
+        if math.fabs(p) > math.fabs(var2) and index_e + 3 < len(arr):
+            p = var2
+            res = i
+    print("\nEquivalent point at %.1f ml" % res)
+
+def parse_file(fd):
+    arr = fd.readlines()
+    try:
+        for i in range(len(arr)):
+            arr[i] = arr[i].strip('\n').split(';')
+            arr[i][0] = float(arr[i][0])
+            arr[i][1] = float(arr[i][1])
+            if (len(arr[i]) != 2):
+                exit(84)
+    except:
+        print("Invalid line : ", arr[i])
+        exit(84)
+    else:
+        return (arr)
+
+check_error()
+try:
+    fd = open(sys.argv[1])
+except :
+    print("File does not exist")
+    exit(84)
+arr = parse_file(fd)
+if len(arr) <= 4:
+    print("Not enough data in file")
+    exit(84);
+else:
+    run(arr)
